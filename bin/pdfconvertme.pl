@@ -33,8 +33,9 @@ use File::Basename;
 use Getopt::Long;
 use Email::MIME;
 use File::Slurp;
-use File::Temp qw(tempdir);
 use Text::Iconv;
+use File::Temp qw(tempdir);
+use File::Path;
 use IPC::Open2;
 use English qw(-no_match_vars);
 use POSIX;
@@ -269,7 +270,7 @@ if ($options{'convert-attachment'}) {
              $attachment_file->unlink_on_destroy(0);
              my $attach_fh;
              if (!open($attach_fh, '>', $attachment_file)) {
-                croak "Unable to write to '$attachment_file': $OS_ERROR" ;
+                croak "Unable to write to '$attachment_file': $OS_ERROR";
              }
              print {$attach_fh} $part->body;
              close($attach_fh) or carp 'Unable to close attachment filehandle';
@@ -450,7 +451,7 @@ if (-s $pdf_filename ) {
    my @args = ("${response_subject_prefix}${subject}", $pdf_filename, $from_addr, $blurb_file);
 
    if ($email_result) {
-      my $rc = system($mail_attachment_cmd, @args);
+      my $rc = system $mail_attachment_cmd, @args;
       if ($rc == -1) {
          croak "failed to execute: $OS_ERROR";
       }
@@ -469,7 +470,7 @@ else {
 
    unlink $email_input_tmp;
    unlink $pdf_filename;
-   system "rm -fr $tempdir";
+   rmtree([$tempdir]);
    croak 'Error: conversion failed';
 }
 
@@ -493,7 +494,7 @@ END {
       }
       if (defined $tempdir && -d $tempdir) {
          # Remove the temporary directory for inline stuff
-         system "rm -fr $tempdir";
+         rmtree([$tempdir]);
       }
    }
 }
