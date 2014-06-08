@@ -38,6 +38,7 @@ use File::Temp qw(tempdir);
 use File::Path;
 use IPC::Open2;
 use English qw(-no_match_vars);
+use XML::Feed;
 use POSIX;
 use Carp;
 
@@ -50,6 +51,7 @@ my $failed              = 0;
 my %options;
 my %opts = (
     'force-url'          => \$options{'force-url'},
+    'force-rss-url'      => \$options{'force-rss-url'},
     'no-headers'         => \$options{'no-headers'},
     'convert-attachment' => \$options{'convert-attachment'},
     'no-subject-prefix'  => \$options{'no-subject-prefix'},
@@ -182,6 +184,10 @@ sub convert_plain_to_html {
 
 if (!GetOptions(%opts)) {
    croak "Failed to parse options: $OS_ERROR";
+}
+
+if ($options{'force-rss-url'}) {
+   $options{'no-headers'} = 1;
 }
 
 if ($options{'blurb-file'} && -f $options{'blurb-file'}) {
@@ -346,7 +352,7 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
    }
 
    # Fallback to plain text if no HTML or if we are in force-url mode (where we prefer plain text)
-   if ($options{'force-url'} || !defined $body) {
+   if ($options{'force-url'} || $options{'force-rss-url'} || !defined $body) {
       foreach my $part (@parts) {
          if ($part->content_type =~ m~^text/plain~xms) {
             $body = $part->body;
@@ -358,14 +364,25 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
             if ($body =~ /<html>/ixms) {
                $format = 'html';
             }
-            elsif ($options{'force-url'} && $body =~ m~\s*(https?://\S+)\s*~xms) {
-               $format  = 'url';
+            elsif (($options{'force-url'} || $options{'force-rss-url'}) && $body =~ m~\s*(https?://\S+)\s*~xms) {
                $url     = $1;
 
-               # remove any extra newlines
-               $url     =~ s/[\r\n]//xms;
-               # encode any special html characters
-               $url     = encode_entities($url);
+               if ($options{'force-url'}) {
+                  $format  = 'url';
+
+                  # remove any extra newlines
+                  $url     =~ s/[\r\n]//xms;
+                  # encode any special html characters
+                  $url     = encode_entities($url);
+              }
+               elsif ($options{'force-rss-url'}) {
+                  $format     = 'html';
+                  my $feed    = XML::Feed->parse(URI->new($url)) or die XML::Feed->errstr;
+                  my $entry   = ($feed->entries)[0];
+                  my $content = $entry->content;
+
+                  $body = $content->body;
+               }
             }
             else {
                $format = 'plain2html';
