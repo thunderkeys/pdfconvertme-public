@@ -266,14 +266,14 @@ if ($options{'convert-attachment'}) {
             }
          }
          if (defined $suffix) {
-             $attachment_file = File::Temp->new(TEMPLATE => 'pdfconvertme_attachment.XXXXXX', DIR => $tmpdir, SUFFIX => $suffix);
-             $attachment_file->unlink_on_destroy(0);
-             my $attach_fh;
-             if (!open($attach_fh, '>', $attachment_file)) {
-                croak "Unable to write to '$attachment_file': $OS_ERROR";
-             }
-             print {$attach_fh} $part->body;
-             close($attach_fh) or carp 'Unable to close attachment filehandle';
+            $attachment_file = File::Temp->new(TEMPLATE => 'pdfconvertme_attachment.XXXXXX', DIR => $tmpdir, SUFFIX => $suffix);
+            $attachment_file->unlink_on_destroy(0);
+            my $attach_fh;
+            if (!open($attach_fh, '>', $attachment_file)) {
+               croak "Unable to write to '$attachment_file': $OS_ERROR";
+            }
+            print {$attach_fh} $part->body;
+            close($attach_fh) or carp 'Unable to close attachment filehandle';
          }
          last;
       }
@@ -349,29 +349,29 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
    if ($options{'force-url'} || !defined $body) {
       foreach my $part (@parts) {
          if ($part->content_type =~ m~^text/plain~xms) {
-             $body = $part->body;
-             if ($part->content_type =~ m~charset="?(\S+)"?~xms) {
-                $encoding = $1;
-                $encoding =~ tr/A-Z/a-z/;
-             }
-             # Check if this is lazy HTML mail
-             if ($body =~ /<html>/ixms) {
-                 $format = 'html';
-             }
-             elsif ($options{'force-url'} && $body =~ m~\s*(https?://\S+)\s*~xms) {
-                 $format  = 'url';
-                 $url     = $1;
-   
-                 # remove any extra newlines
-                 $url     =~ s/[\r\n]//xms;
-                 # encode any special html characters
-                 $url     = encode_entities($url);
-             }
-             else {
-                 $format = 'plain2html';
-             }
+            $body = $part->body;
+            if ($part->content_type =~ m~charset="?(\S+)"?~xms) {
+               $encoding = $1;
+               $encoding =~ tr/A-Z/a-z/;
+            }
+            # Check if this is lazy HTML mail
+            if ($body =~ /<html>/ixms) {
+               $format = 'html';
+            }
+            elsif ($options{'force-url'} && $body =~ m~\s*(https?://\S+)\s*~xms) {
+               $format  = 'url';
+               $url     = $1;
 
-             last;
+               # remove any extra newlines
+               $url     =~ s/[\r\n]//xms;
+               # encode any special html characters
+               $url     = encode_entities($url);
+            }
+            else {
+               $format = 'plain2html';
+            }
+
+            last;
          }
       }
    }
