@@ -12,6 +12,7 @@ Required packages (available in Ubuntu 12.04/14.04):
 - libhtml-fromtext-perl
 - libemail-mime-perl
 - libfile-slurp-perl
+- libxml-feed-perl
 - mpack
 - A copy of a compiled wkhtmltopdf binary (I use [this version](https://code.google.com/p/wkhtmltopdf/downloads/detail?name=wkhtmltopdf-0.10.0_rc2-static-amd64.tar.bz2&can=2&q=))
 
@@ -27,3 +28,4 @@ Installation/Usage:
   - `--no-headers` - Don't include email headers at top of converted PDF (From/To/Subject/Date)
   - `--convert-attachment` - Attempt to convert the first valid attachment found in an email
   - `--force-url` - Convert the first URL found in a message body
+  - `--force-rss-url` - Treat the first URL found in a message body an an RSS feed and convert the body found in the fist entry
