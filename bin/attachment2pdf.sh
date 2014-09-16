@@ -32,12 +32,17 @@ if [ -d $OUTPUTDIR ]; then
       xps|opxs) converter='/usr/bin/xpstopdf'
          extension=xps
          ;;
+      md|markdown) converter='/usr/local/bin/markdown2pdf.sh'
+         extension=markdown
+         ;;
       *) converter='/usr/local/bin/image2pdf.sh'
          extension=other
          ;;
    esac
 
    if [ "x$extension" = "xother" ]; then
+      $converter "$OUTPUTFILE" "$INPUTFILE"
+   elif [ "x$extension" = "xmarkdown" ]; then
       $converter "$OUTPUTFILE" "$INPUTFILE"
    elif [ "x$extension" = "xxps" ]; then
       $converter "$INPUTFILE" "$OUTPUTFILE"

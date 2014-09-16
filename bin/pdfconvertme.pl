@@ -30,6 +30,7 @@ use warnings;
 use HTML::FromText;
 use HTML::Entities;
 use File::Basename;
+use Text::Markdown qw(markdown);
 use Getopt::Long;
 use Email::MIME;
 use File::Slurp;
@@ -52,6 +53,7 @@ my %options;
 my %opts = (
     'force-url'          => \$options{'force-url'},
     'force-rss-url'      => \$options{'force-rss-url'},
+    'force-markdown'     => \$options{'force-markdown'},
     'no-headers'         => \$options{'no-headers'},
     'convert-attachment' => \$options{'convert-attachment'},
     'no-subject-prefix'  => \$options{'no-subject-prefix'},
@@ -187,6 +189,10 @@ if (!GetOptions(%opts)) {
 }
 
 if ($options{'force-rss-url'}) {
+   $options{'no-headers'} = 1;
+}
+
+if ($options{'force-markdown'}) {
    $options{'no-headers'} = 1;
 }
 
@@ -385,7 +391,12 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
                }
             }
             else {
-               $format = 'plain2html';
+               if ($options{'force-markdown'}) {
+                  $format = 'markdown';
+               }
+               else {
+                  $format = 'plain2html';
+               }
             }
 
             last;
@@ -448,6 +459,11 @@ else {
       $format = 'html';
    }
    push @converter_args, $subject;
+}
+
+if ($format eq 'markdown') {
+   $body   = markdown($body);
+   $format = 'html';
 }
 
 if ($format eq 'html' && (@inline_images > 0 || @append_images > 0)) {

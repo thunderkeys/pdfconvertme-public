@@ -9,6 +9,7 @@ To change this, make sure you have a working MTA and edit
 `bin/pdfconvertme.pl`, set `$email_result = 1`
 
 Required packages (available in Ubuntu 12.04/14.04):
+- libtext-markdown-perl
 - libhtml-fromtext-perl
 - libemail-mime-perl
 - libfile-slurp-perl
@@ -29,3 +30,4 @@ Installation/Usage:
   - `--convert-attachment` - Attempt to convert the first valid attachment found in an email
   - `--force-url` - Convert the first URL found in a message body
   - `--force-rss-url` - Treat the first URL found in a message body an an RSS feed and convert the body found in the fist entry
+  - `--force-markdown` - Treat inline text as [Markdown](http://daringfireball.net/projects/markdown/syntax), implies --no-headers
