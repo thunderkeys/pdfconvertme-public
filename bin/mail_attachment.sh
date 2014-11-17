@@ -1,7 +1,6 @@
 #!/bin/bash 
 
 # Globals
-REPLY_TO="
 MAIL_FROM="pdfconvert@thunderkeys.net"
 REPLY_TO="no-reply@thunderkeys.net"
 
