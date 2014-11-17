@@ -35,7 +35,7 @@ if [ ! -z "$ATTACHNEWFILE" ]; then
 fi
 
 if [ -s $MAIL_BODY -a -s $MAIL_HEAD ]; then
-   cat $MAIL_HEAD $MAIL_BODY | sendmail -i -t
+   cat $MAIL_HEAD $MAIL_BODY | /usr/lib/sendmail -i -t
 else
    echo "Error assembling message - empty body or header"
    exit 1
