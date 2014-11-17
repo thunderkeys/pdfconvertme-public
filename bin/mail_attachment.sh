@@ -1,8 +1,8 @@
 #!/bin/bash 
 
 # Globals
-MAIL_FROM="pdfconvert@thunderkeys.net"
-REPLY_TO="no-reply@thunderkeys.net"
+MAIL_FROM="pdfconvert@yourdomainhere.com"
+REPLY_TO="no-reply@yourdomainhere.com"
 
 # Arguments
 SUBJECT="$1"
