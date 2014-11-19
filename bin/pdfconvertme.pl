@@ -419,6 +419,11 @@ if ($format eq 'plain2html') {
    $format = 'html';
 }
 
+if ($format eq 'markdown') {
+   $body   = markdown($body);
+   $format = 'html';
+}
+
 if (defined $format && $format eq 'html' && scalar(@append_images) > 0) {
    foreach my $append_image (@append_images) {
       my $file = $append_image->{'filename'};
@@ -459,11 +464,6 @@ else {
       $format = 'html';
    }
    push @converter_args, $subject;
-}
-
-if ($format eq 'markdown') {
-   $body   = markdown($body);
-   $format = 'html';
 }
 
 if ($format eq 'html' && (@inline_images > 0 || @append_images > 0)) {
