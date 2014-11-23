@@ -325,8 +325,8 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
       }
       elsif ($part->content_type =~ m~image/(\S+)~xms) {
          my $image_extension = $1;
-         my $image_filename  = sha256_hex($part->header('Content-ID')) . '.' . $image_extension;
          my $cid             = $part->header('Content-ID') || basename($part->filename);
+         my $image_filename  = sha256_hex($cid) . '.' . $image_extension;
 
          my %inline_image;
          $inline_image{'cid'}      = $cid;
