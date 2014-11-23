@@ -35,6 +35,7 @@ use Getopt::Long;
 use Email::MIME;
 use File::Slurp;
 use Text::Iconv;
+use Digest::SHA qw(sha256_hex);
 use File::Temp qw(tempdir);
 use File::Path;
 use IPC::Open2;
@@ -322,16 +323,18 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
             $encoding = $1;
          }
       }
-      elsif ($part->content_type =~ m~image/~xms) {
+      elsif ($part->content_type =~ m~image/(\S+)~xms) {
+         my $image_extension = $1;
+         my $image_filename  = sha256_hex($part->header('Content-ID')) . '.' . $image_extension;
+         my $cid             = $part->header('Content-ID') || basename($part->filename);
+
          my %inline_image;
+         $inline_image{'cid'}      = $cid;
+         $inline_image{'filename'} = $image_filename;
          if (!defined $part->header('Content-ID')) {
-            $inline_image{'cid'}      = basename($part->filename);
-            $inline_image{'filename'} = basename($part->filename); 
             push @append_images, \%inline_image;
          }
          else {
-            $inline_image{'cid'}      = $part->header('Content-ID');
-            $inline_image{'filename'} = basename($part->filename); 
             push @inline_images, \%inline_image;
          }
          my $img_fh;
