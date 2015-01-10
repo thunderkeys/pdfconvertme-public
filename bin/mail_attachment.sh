@@ -30,8 +30,8 @@ echo "Reply-To: $REPLY_TO" >>$MAIL_HEAD
 mpack $BLURB -s "$SUBJECT" -o $MAIL_BODY "$ATTACHMENT"
 
 if [ ! -z "$ATTACHNEWFILE" ]; then
-    # If subject is not empty, replace attachment filename with <subject>.pdf
-    perl -pi -e "s~$ATTACHOLDFILE~${ATTACHNEWFILE}.pdf~g" $MAIL_BODY
+   # If subject is not empty, replace attachment filename with <subject>.pdf
+   perl -pi -e "s~$ATTACHOLDFILE~${ATTACHNEWFILE}.pdf~g" $MAIL_BODY
 fi
 
 if [ -s $MAIL_BODY -a -s $MAIL_HEAD ]; then

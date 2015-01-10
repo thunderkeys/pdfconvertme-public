@@ -45,25 +45,25 @@ use POSIX;
 use Carp;
 
 # Globals
-my $email_result        = 0; ### CHANGE ME ###
+my $email_result        = 0;                                   ### CHANGE ME ###
 my $mail_attachment_cmd = 'mail_attachment.sh';
 my $blurb_file          = '/usr/local/etc/pdfconvertme.blurb';
 my $tmpdir              = '/var/tmp';
 my $failed              = 0;
 my %options;
 my %opts = (
-    'force-url'          => \$options{'force-url'},
-    'force-rss-url'      => \$options{'force-rss-url'},
-    'force-markdown'     => \$options{'force-markdown'},
-    'no-headers'         => \$options{'no-headers'},
-    'convert-attachment' => \$options{'convert-attachment'},
-    'no-subject-prefix'  => \$options{'no-subject-prefix'},
-    'blurb-file=s'       => \$options{'blurb-file'},
+   'force-url'          => \$options{'force-url'},
+   'force-rss-url'      => \$options{'force-rss-url'},
+   'force-markdown'     => \$options{'force-markdown'},
+   'no-headers'         => \$options{'no-headers'},
+   'convert-attachment' => \$options{'convert-attachment'},
+   'no-subject-prefix'  => \$options{'no-subject-prefix'},
+   'blurb-file=s'       => \$options{'blurb-file'},
 );
 my %converters = (
-    'attachment' => '/usr/local/bin/attachment2pdf.sh',
-    'html'       => '/usr/local/bin/html2pdf.sh',
-    'url'        => '/usr/local/bin/url2pdf.sh',
+   'attachment' => '/usr/local/bin/attachment2pdf.sh',
+   'html'       => '/usr/local/bin/html2pdf.sh',
+   'url'        => '/usr/local/bin/url2pdf.sh',
 );
 
 # ---------------------------------------------------
@@ -79,7 +79,11 @@ sub logmsg {
 
 sub convert_to_pdf {
    my ($message, $format, @converter_args) = @_;
-   my $pdf_tempfile = File::Temp->new(TEMPLATE => 'pdfconvertme.XXXXXX', DIR => $tmpdir, SUFFIX => '.pdf');
+   my $pdf_tempfile = File::Temp->new(
+      TEMPLATE => 'pdfconvertme.XXXXXX',
+      DIR      => $tmpdir,
+      SUFFIX   => '.pdf'
+   );
    $pdf_tempfile->unlink_on_destroy(0);
    my $fh;
 
@@ -94,7 +98,9 @@ sub convert_to_pdf {
       close($fh) or carp "Unable to close converter: $CHILD_ERROR";
    }
    else {
-      logmsg("Failed to spawn converter '|$converter $pdf_tempfile " . join(' ', @converter_args) . "'");
+      logmsg("Failed to spawn converter '|$converter $pdf_tempfile "
+           . join(' ', @converter_args)
+           . "'");
       unlink($pdf_tempfile);
       $pdf_tempfile = '';
    }
@@ -112,7 +118,7 @@ sub unpack_multipart {
 
    foreach my $part ($in_part->parts) {
       if ($part->content_type =~ m~^multipart/~xms) {
-         @unpacked_parts = unpack_multipart($part, $depth+1);
+         @unpacked_parts = unpack_multipart($part, $depth + 1);
       }
       else {
          push @unpacked_parts, $part;
@@ -151,7 +157,9 @@ sub convert_to_utf8 {
    if (!defined $new_body || $new_body eq '') {
       logmsg("Original encoding conversion failed, trying with iconv -c...");
       my ($iconv_fh_in, $iconv_fh_out);
-      my $pid = open2($iconv_fh_out, $iconv_fh_in, '/usr/bin/iconv', '-f', $encoding, '-t', 'utf-8', '-c');
+      my $pid =
+        open2($iconv_fh_out, $iconv_fh_in, '/usr/bin/iconv', '-f', $encoding,
+         '-t', 'utf-8', '-c');
       if ($pid) {
          print {$iconv_fh_in} $body;
          my $result = close($iconv_fh_in);
@@ -174,10 +182,13 @@ sub convert_plain_to_html {
    my $new_body;
 
    if ($encoding ne 'utf-8') {
-      $new_body = text2html($body, ( urls => 1, email => 1, lines => 1, paras => 1, metachars => 0));
+      $new_body =
+        text2html($body,
+         (urls => 1, email => 1, lines => 1, paras => 1, metachars => 0));
    }
    else {
-      $new_body = text2html($body, ( urls => 1, email => 1, lines => 1, paras => 1));
+      $new_body =
+        text2html($body, (urls => 1, email => 1, lines => 1, paras => 1));
    }
 
    return $new_body;
@@ -201,7 +212,11 @@ if ($options{'blurb-file'} && -f $options{'blurb-file'}) {
    $blurb_file = $options{'blurb-file'};
 }
 
-my $email_input_tmp = File::Temp->new(TEMPLATE => 'pdfconvertme.XXXXXX', DIR => $tmpdir, SUFFIX => '.msg');
+my $email_input_tmp = File::Temp->new(
+   TEMPLATE => 'pdfconvertme.XXXXXX',
+   DIR      => $tmpdir,
+   SUFFIX   => '.msg'
+);
 $email_input_tmp->unlink_on_destroy(0);
 
 if (!$email_input_tmp) {
@@ -212,7 +227,7 @@ if (!$email_input_tmp) {
 while (my $line = <>) {
    print {$email_input_tmp} $line;
 }
-if (!close ($email_input_tmp)) {
+if (!close($email_input_tmp)) {
    logmsg("Unable to close() on $email_input_tmp: $OS_ERROR");
 }
 
@@ -228,21 +243,38 @@ if (!$parsed) {
    croak "ERROR: Message failed to parse. Error: $OS_ERROR";
 }
 
-my $from    = $parsed->header('From');
+my $from      = $parsed->header('From');
+my $from_orig = $from;
 if (!defined $from) {
    croak "ERROR: No 'From:' header, aborting!";
 }
+my $alternate_from = $parsed->header('Reply-to');
+if (defined $alternate_from && $alternate_from !~ /^\s*$/xms) {
+   $from = $alternate_from;
+}
+else {
+   $alternate_from = $parsed->header('Resent-from');
+   if (defined $alternate_from && $alternate_from !~ /^\s*$/xms) {
+      $from = $alternate_from;
+   }
+}
 
-my $subject = $parsed->header('Subject');
-my @froms   = Email::Address->parse($from);
+my $subject   = $parsed->header('Subject');
+my @froms     = Email::Address->parse($from);
 my $from_addr = $froms[0]->address;
 
 if (!defined $from_addr) {
    croak "Unable to determine a valid from address from '$from', aborting!";
 }
 
-my $to      = $parsed->header('To');
-my $date    = $parsed->header('Date');
+my $in_reply_to = $parsed->header('In-Reply-To');
+if (defined $in_reply_to && $in_reply_to !~ /^\s*$/xms) {
+   croak
+     "Detected a mail loop via header 'In-Reply-To: $in_reply_to', aborting!";
+}
+
+my $to   = $parsed->header('To');
+my $date = $parsed->header('Date');
 my $body;
 my $format;
 my $headers;
@@ -254,11 +286,12 @@ my $parts_count = scalar(@parts);
 my $attachment_file;
 my @inline_images;
 my @append_images;
-my $tempdir = tempdir( DIR => $tmpdir );
-my $html_tempfile = File::Temp->new( DIR => $tempdir, SUFFIX => '.html');
+my $tempdir = tempdir(DIR => $tmpdir);
+my $html_tempfile = File::Temp->new(DIR => $tempdir, SUFFIX => '.html');
 my $encoding = 'utf-8';
 
 $html_tempfile->unlink_on_destroy(0);
+
 # Look for attachments if that is our mission
 if ($options{'convert-attachment'}) {
    foreach my $part (@parts) {
@@ -268,18 +301,24 @@ if ($options{'convert-attachment'}) {
          my $suffix;
          if ($part->filename =~ /(\.[^\.]+)$/xms) {
             $suffix = $1;
+
             # Don't try to process signature, rar or zip attachments...
             if ($suffix =~ /^\.(p7s|rar|zip)$/ixms) {
                undef $format;
                next;
             }
+
             # for .eml attachments, process as a regular html conversion
             elsif ($suffix =~ /^\.eml$/ixms) {
                $format = 'eml';
             }
          }
          if (defined $suffix) {
-            $attachment_file = File::Temp->new(TEMPLATE => 'pdfconvertme_attachment.XXXXXX', DIR => $tmpdir, SUFFIX => $suffix);
+            $attachment_file = File::Temp->new(
+               TEMPLATE => 'pdfconvertme_attachment.XXXXXX',
+               DIR      => $tmpdir,
+               SUFFIX   => $suffix
+            );
             $attachment_file->unlink_on_destroy(0);
             my $attach_fh;
             if (!open($attach_fh, '>', $attachment_file)) {
@@ -294,12 +333,14 @@ if ($options{'convert-attachment'}) {
 }
 
 if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
+
    # Special handling for .eml attachments
    if (defined $format && $format eq 'eml') {
       $options{'convert-attachment'} = 0;
       undef $body;
 
       $format = 'html';
+
       # (Re-)parse the message
       {
          local $INPUT_RECORD_SEPARATOR = undef;
@@ -314,6 +355,7 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
       $date    = $parsed->header('Date');
       $subject = $parsed->header('Subject');
    }
+
    # Look for HTML parts first
    foreach my $part (@parts) {
       if ($part->content_type =~ m~^text/html~xms && !defined $body) {
@@ -325,8 +367,8 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
       }
       elsif ($part->content_type =~ m~image/(\S+)~xms) {
          my $image_extension = $1;
-         my $cid             = $part->header('Content-ID') || basename($part->filename);
-         my $image_filename  = sha256_hex($cid) . '.' . $image_extension;
+         my $cid = $part->header('Content-ID') || basename($part->filename);
+         my $image_filename = sha256_hex($cid) . '.' . $image_extension;
 
          my %inline_image;
          $inline_image{'cid'}      = $cid;
@@ -350,7 +392,7 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
       my $image_count = 0;
       while ($body =~ m/src\s*=\s*"?cid:([^"\s]+)\s*"?/ixms) {
          my $cid = $1;
-         last if $image_count++ > $max_images; 
+         last if $image_count++ > $max_images;
          foreach my $inline_image (@inline_images) {
             my $file = $inline_image->{'filename'};
             if (grep { /$cid/xms } $inline_image->{'cid'}) {
@@ -360,7 +402,7 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
       }
    }
 
-   # Fallback to plain text if no HTML or if we are in force-url mode (where we prefer plain text)
+# Fallback to plain text if no HTML or if we are in force-url mode (where we prefer plain text)
    if ($options{'force-url'} || $options{'force-rss-url'} || !defined $body) {
       foreach my $part (@parts) {
          if ($part->content_type =~ m~^text/plain~xms) {
@@ -369,24 +411,29 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
                $encoding = $1;
                $encoding =~ tr/A-Z/a-z/;
             }
+
             # Check if this is lazy HTML mail
             if ($body =~ /<html>/ixms) {
                $format = 'html';
             }
-            elsif (($options{'force-url'} || $options{'force-rss-url'}) && $body =~ m~\s*(https?://\S+)\s*~xms) {
-               $url     = $1;
+            elsif (($options{'force-url'} || $options{'force-rss-url'})
+               && $body =~ m~\s*(https?://\S+)\s*~xms)
+            {
+               $url = $1;
 
                if ($options{'force-url'}) {
-                  $format  = 'url';
+                  $format = 'url';
 
                   # remove any extra newlines
-                  $url     =~ s/[\r\n]//xms;
+                  $url =~ s/[\r\n]//xms;
+
                   # encode any special html characters
-                  $url     = encode_entities($url);
-              }
+                  $url = encode_entities($url);
+               }
                elsif ($options{'force-rss-url'}) {
-                  $format     = 'html';
-                  my $feed    = XML::Feed->parse(URI->new($url)) or die XML::Feed->errstr;
+                  $format = 'html';
+                  my $feed = XML::Feed->parse(URI->new($url))
+                    or die XML::Feed->errstr;
                   my $entry   = ($feed->entries)[0];
                   my $content = $entry->content;
 
@@ -409,7 +456,7 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
 }
 
 if (!defined $format) {
-  croak "Unable to determine format of email, giving up!";
+   croak "Unable to determine format of email, giving up!";
 }
 
 if ($encoding ne 'utf-8') {
@@ -418,7 +465,7 @@ if ($encoding ne 'utf-8') {
 
 # If we got a plaintext message, pretty it up by HTML-ifying it
 if ($format eq 'plain2html') {
-   $body   = convert_plain_to_html($body, $encoding);
+   $body = convert_plain_to_html($body, $encoding);
    $format = 'html';
 }
 
@@ -437,10 +484,20 @@ if (defined $format && $format eq 'html' && scalar(@append_images) > 0) {
 if ($format eq 'html' || $format eq 'url' || $format eq 'attachment') {
    my $align = 'valign="top" align="left"';
    $headers = '<p><table>';
-   $headers .= "<tr><th $align>From:</th><td $align>"    . encode_entities($from)    . "</td></tr>";
-   $headers .= "<tr><th $align>To:</th><td $align>"      . encode_entities($to)      . "</td></tr>";
-   $headers .= "<tr><th $align>Subject:</th><td $align>" . encode_entities($subject) . "</td></tr>";
-   $headers .= "<tr><th $align>Date:</th><td $align>"    . encode_entities($date)    . "</td></tr>";
+   $headers .=
+       "<tr><th $align>From:</th><td $align>"
+     . encode_entities($from)
+     . "</td></tr>";
+   $headers .=
+     "<tr><th $align>To:</th><td $align>" . encode_entities($to) . "</td></tr>";
+   $headers .=
+       "<tr><th $align>Subject:</th><td $align>"
+     . encode_entities($subject)
+     . "</td></tr>";
+   $headers .=
+       "<tr><th $align>Date:</th><td $align>"
+     . encode_entities($date)
+     . "</td></tr>";
    $headers .= '</table>';
    $headers .= '</p>';
    $headers .= '<hr>';
@@ -453,7 +510,7 @@ if ($options{'no-headers'}) {
    $headers = '';
 }
 
-my $message = $headers . $body;
+my $message        = $headers . $body;
 my @converter_args = ();
 
 if ($format eq 'url') {
@@ -479,12 +536,15 @@ if ($format eq 'html' && (@inline_images > 0 || @append_images > 0)) {
 my $pdf_filename = convert_to_pdf($message, $format, @converter_args);
 chomp $pdf_filename;
 
-if (-s $pdf_filename ) {
+if (-s $pdf_filename) {
    my $response_subject_prefix = 'Converted: ';
    if ($options{'no-subject-prefix'}) {
       $response_subject_prefix = '';
    }
-   my @args = ("${response_subject_prefix}${subject}", $pdf_filename, $from_addr, $blurb_file);
+   my @args = (
+      "${response_subject_prefix}${subject}",
+      $pdf_filename, $from_addr, $blurb_file
+   );
 
    if ($email_result) {
       my $rc = system $mail_attachment_cmd, @args;
@@ -492,7 +552,8 @@ if (-s $pdf_filename ) {
          croak "failed to execute: $OS_ERROR";
       }
       elsif ($rc & 127) {
-         croak sprintf "child died with signal %d, %s coredump", ($rc & 127),  ($rc & 128) ? 'with' : 'without';
+         croak sprintf "child died with signal %d, %s coredump", ($rc & 127),
+           ($rc & 128) ? 'with' : 'without';
       }
    }
 
@@ -529,6 +590,7 @@ END {
          unlink $attachment_file->filename;
       }
       if (defined $tempdir && -d $tempdir) {
+
          # Remove the temporary directory for inline stuff
          rmtree([$tempdir]);
       }
