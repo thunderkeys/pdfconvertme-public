@@ -1,7 +1,7 @@
 pdfconvertme-public
 ===================
 
-A stripped down, open-source version of [pdfconvert.me](http://pdfconvert.me)
+A simplified, open-source version of [pdfconvert.me](http://pdfconvert.me)
 for self-hosting in environments where privacy/security is a concern.
 
 By default, it will generate the PDF but not return it via email.
