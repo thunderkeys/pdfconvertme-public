@@ -417,7 +417,7 @@ if (!$options{'convert-attachment'} || !defined $format || $format eq 'eml') {
                $format = 'html';
             }
             elsif (($options{'force-url'} || $options{'force-rss-url'})
-               && $body =~ m~\s*(https?://\S+)\s*~xms)
+               && $body =~ m~\s*(https?://\S+)\s*~ixms)
             {
                $url = $1;
 
