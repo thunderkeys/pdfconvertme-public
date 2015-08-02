@@ -15,7 +15,9 @@ Required packages (available in Ubuntu 12.04/14.04):
 - libfile-slurp-perl
 - libxml-feed-perl
 - mpack
-- A copy of a compiled wkhtmltopdf binary (I use [this version](https://code.google.com/p/wkhtmltopdf/downloads/detail?name=wkhtmltopdf-0.10.0_rc2-static-amd64.tar.bz2&can=2&q=))
+- A copy of a compiled wkhtmltopdf binary (I have used [this version](https://code.google.com/p/wkhtmltopdf/downloads/detail?name=wkhtmltopdf-0.10.0_rc2-static-amd64.tar.bz2&can=2&q=) in the
+past, but now compile my own as described
+[here](https://github.com/wkhtmltopdf/wkhtmltopdf/blob/master/INSTALL.md))
 
 For attachment conversions:
 - libreoffice (requires `universe` in sources.list)
