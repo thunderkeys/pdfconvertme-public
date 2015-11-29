@@ -40,7 +40,7 @@ Installation/Usage:
   - `--convert-attachment` - Attempt to convert the first valid attachment found in an email
   - `--force-url` - Convert the first URL found in a message body
   - `--force-rss-url` - Treat the first URL found in a message body an an RSS feed and convert the body found in the fist entry
-  - `--force-content-url` - Only retrieve the main content of the URL, similar to Readability
+  - `--force-content-url` - Only retrieve the main content of the URL, similar to Readability, implies --no-headers
   - `--no-javascript` - Will perform web conversion requests with javascript disabled
   - `--papersize <size>` - Change the papersize on the resulting PDF (defaults to A4)
   - `--pdf-to-text` - Attempts to convert a PDF back to text only
