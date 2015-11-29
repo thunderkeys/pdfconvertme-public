@@ -15,6 +15,7 @@ Required packages (available in Ubuntu 12.04/14.04):
 - libfile-slurp-perl
 - libxml-feed-perl
 - mpack
+- poppler-utils (for pdf2text conversions)
 - A copy of a compiled wkhtmltopdf binary (I have used [this version](https://code.google.com/p/wkhtmltopdf/downloads/detail?name=wkhtmltopdf-0.10.0_rc2-static-amd64.tar.bz2&can=2&q=) in the
 past, but now compile my own as described
 [here](https://github.com/wkhtmltopdf/wkhtmltopdf/blob/master/INSTALL.md))
@@ -23,6 +24,9 @@ For attachment conversions:
 - libreoffice (requires `universe` in sources.list)
 - libgxps-utils (for .xps files)
 - imagemagick (for images)
+
+Other optional packages:
+- a2ps (raw text2pdf, no HTML-ification)
 
 Installation/Usage:
 - Copy bin/ and etc/ to /usr/local/
