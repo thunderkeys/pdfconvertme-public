@@ -50,6 +50,7 @@ use Carp;
 # Globals
 my $attachments_enabled = 1;
 my $converter_threshold = 2;
+my $prevent_mail_loops  = 1;
 my $max_per_hour        = 30;
 my $email_result        = 0;                                   ### CHANGE ME ###
 my $email_domain        = 'yourdomainhere.com';
@@ -395,10 +396,12 @@ if (!defined $from_addr) {
    croak "Unable to determine a valid from address from '$from', aborting!";
 }
 
-my $in_reply_to = $parsed->header('In-Reply-To');
-if (defined $in_reply_to && $in_reply_to !~ /^\s*$/xms) {
-   croak
-     "Detected a mail loop via header 'In-Reply-To: $in_reply_to', aborting!";
+if ($prevent_mail_loops) {
+   my $in_reply_to = $parsed->header('In-Reply-To');
+   if (defined $in_reply_to && $in_reply_to !~ /^\s*$/xms) {
+      croak
+        "Detected a mail loop via header 'In-Reply-To: $in_reply_to', aborting!";
+   }
 }
 
 my $to   = $parsed->header('To');
