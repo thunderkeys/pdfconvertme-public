@@ -51,6 +51,7 @@ use Carp;
 my $attachments_enabled = 1;
 my $converter_threshold = 2;
 my $prevent_mail_loops  = 1;
+my $loop_domain         = 'yourdomainhere.com';
 my $max_per_hour        = 30;
 my $email_result        = 0;                                   ### CHANGE ME ###
 my $email_domain        = 'yourdomainhere.com';
@@ -95,7 +96,9 @@ sub logmsg {
 
    my $ts = strftime("%Y-%m-%d %H:%M:%S", localtime());
 
-   print "$ts [$PID] $msg\n";
+   if ($options{'debug'}) {
+      print STDERR "$ts [$$] $msg\n";
+   }
 
    return;
 }
@@ -398,7 +401,8 @@ if (!defined $from_addr) {
 
 if ($prevent_mail_loops) {
    my $in_reply_to = $parsed->header('In-Reply-To');
-   if (defined $in_reply_to && $in_reply_to !~ /^\s*$/xms) {
+   my $loop_domain_regex = qr{$loop_domain};
+   if (defined $in_reply_to && $in_reply_to =~ /$loop_domain_regex/xms) {
       croak
         "Detected a mail loop via header 'In-Reply-To: $in_reply_to', aborting!";
    }
