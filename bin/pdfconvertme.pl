@@ -381,7 +381,7 @@ if (!defined $from) {
    croak "ERROR: No 'From:' header, aborting!";
 }
 my $alternate_from = $parsed->header('Reply-to');
-if (defined $alternate_from && $alternate_from !~ /^\s*$/xms) {
+if (defined $alternate_from && $alternate_from !~ /^\s*$/xms && $alternate_from !~ /^(?:donot|no)reply\@/xms) {
    $from = $alternate_from;
 }
 else {
@@ -400,7 +400,7 @@ if (!defined $from_addr) {
 }
 
 if ($prevent_mail_loops) {
-   my $in_reply_to = $parsed->header('In-Reply-To');
+   my $in_reply_to       = $parsed->header('In-Reply-To');
    my $loop_domain_regex = qr{$loop_domain};
    if (defined $in_reply_to && $in_reply_to =~ /$loop_domain_regex/xms) {
       croak
