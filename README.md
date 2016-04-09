@@ -16,6 +16,7 @@ Required packages (available in Ubuntu 12.04/14.04):
 - libxml-feed-perl
 - mpack
 - poppler-utils (for pdf2text conversions)
+- pandoc (for pdf2word conversions)
 - A copy of a compiled wkhtmltopdf binary (I have used [this version](https://code.google.com/p/wkhtmltopdf/downloads/detail?name=wkhtmltopdf-0.10.0_rc2-static-amd64.tar.bz2&can=2&q=) in the
 past, but now compile my own as described
 [here](https://github.com/wkhtmltopdf/wkhtmltopdf/blob/master/INSTALL.md))
@@ -44,5 +45,6 @@ Installation/Usage:
   - `--no-javascript` - Will perform web conversion requests with javascript disabled
   - `--papersize <size>` - Change the papersize on the resulting PDF (defaults to A4)
   - `--pdf-to-text` - Attempts to convert a PDF back to text only
+  - `--pdf-to-word` - Attempts to convert a PDF to Microsoft Word format
   - `--force-from <address>` - Force the response to come from a specific address
   - `--force-markdown` - Treat inline text as [Markdown](http://daringfireball.net/projects/markdown/syntax), implies --no-headers

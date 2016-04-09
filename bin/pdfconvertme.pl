@@ -72,15 +72,17 @@ my %opts = (
    'convert-attachment' => \$options{'convert-attachment'},
    'papersize=s'        => \$options{'papersize'},
    'pdf-to-text'        => \$options{'pdf-to-text'},
+   'pdf-to-word'        => \$options{'pdf-to-word'},
    'force-from=s'       => \$options{'force-from'},
    'debug'              => \$options{'debug'},
 );
 my %converters = (
-   'attachment-pdf' => '/usr/local/bin/pdf2text.sh',
-   'attachment'     => '/usr/local/bin/attachment2pdf.sh',
-   'text'           => '/usr/local/bin/text2pdf.sh',
-   'html'           => '/usr/local/bin/html2pdf.sh',
-   'url'            => '/usr/local/bin/url2pdf.sh',
+   'attachment-pdftext' => '/usr/local/bin/pdf2text.sh',
+   'attachment-pdfword' => '/usr/local/bin/pdf2word.sh',
+   'attachment'         => '/usr/local/bin/attachment2pdf.sh',
+   'text'               => '/usr/local/bin/text2pdf.sh',
+   'html'               => '/usr/local/bin/html2pdf.sh',
+   'url'                => '/usr/local/bin/url2pdf.sh',
 );
 my @papersizes = qw(
    A0 A1 A2 A3 A4 A5 A6 A7 A8 A9
@@ -106,8 +108,11 @@ sub logmsg {
 sub convert_to_pdf {
    my ($message, $format, @converter_args) = @_;
    my $suffix;
-   if ($format eq 'attachment-pdf') {
-       $suffix = '.txt';
+   if ($format eq 'attachment-pdftext') {
+      $suffix = '.txt';
+   }
+   elsif ($format eq 'attachment-pdfword') {
+      $suffix = '.docx';
    }
    else {
        $suffix = '.pdf';
@@ -115,7 +120,7 @@ sub convert_to_pdf {
    my $pdf_tempfile = File::Temp->new(
       TEMPLATE => 'pdfconvertme.XXXXXX',
       DIR      => $tmpdir,
-      SUFFIX   => '.pdf'
+      SUFFIX   => $suffix,
    );
    $pdf_tempfile->unlink_on_destroy(0);
    my $fh;
@@ -252,7 +257,7 @@ sub clean_url {
    my ($url) = @_;
 
    # remove any extra newlines
-   $url     =~ s/[\r\n]//;
+   $url     =~ s/[\r\n]//xms;
 
    # encode any special html characters
    $url     = encode_entities($url);
@@ -401,7 +406,7 @@ if (!defined $from_addr) {
 
 if ($prevent_mail_loops) {
    my $in_reply_to       = $parsed->header('In-Reply-To');
-   my $loop_domain_regex = qr{$loop_domain};
+   my $loop_domain_regex = qr{$loop_domain}xms;
    if (defined $in_reply_to && $in_reply_to =~ /$loop_domain_regex/xms) {
       croak
         "Detected a mail loop via header 'In-Reply-To: $in_reply_to', aborting!";
@@ -421,7 +426,7 @@ if (defined $cc_raw) {
     my @ccs       = Email::Address->parse($cc_raw);
     logmsg("Cc header = $cc_raw");
     foreach my $cc (@ccs) {
-        my $domain_regex = qr/\@$email_domain$/is;
+        my $domain_regex = qr/\@$email_domain$/ixms;
         next if $cc =~ $domain_regex; # skip my own addresses
         push @cc_emails, $cc->address;
     }
@@ -462,9 +467,14 @@ if ($options{'convert-attachment'}) {
             elsif ($suffix =~ /^\.eml$/ixms) {
                $format = 'eml';
             }
-            # PDF can be unconverted using pdftotext
-            elsif ($suffix =~ /^\.pdf$/ixms && $options{'pdf-to-text'}) {
-               $format = 'attachment-pdf';
+            # PDF can be unconverted using pdftotext/pdftoword
+            elsif ($suffix =~ /^\.pdf$/ixms) {
+               if ($options{'pdf-to-text'}) {
+                  $format = 'attachment-pdftext';
+               }
+               elsif ($options{'pdf-to-word'}) {
+                  $format = 'attachment-pdfword';
+               }
             }
          }
          if (defined $suffix) {
@@ -486,7 +496,11 @@ if ($options{'convert-attachment'}) {
    }
 }
 
-if (!$options{'convert-attachment'} || !$options{'pdf-to-text'} || !defined $format || $format eq 'eml') {
+if (!$options{'convert-attachment'} ||
+    !$options{'pdf-to-text'} ||
+    !$options{'pdf-to-word'} ||
+    !defined $format ||
+    $format eq 'eml') {
    # Special handling for .eml attachments
    if (defined $format && $format eq 'eml') {
       $options{'convert-attachment'} = 0;
@@ -511,7 +525,11 @@ if (!$options{'convert-attachment'} || !$options{'pdf-to-text'} || !defined $for
 
    # Look for HTML parts first
    foreach my $part (@parts) {
-      if ($part->content_type =~ m~^text/html~xms && !defined $body && !$options{'pdf-to-text'}) {
+      if ($part->content_type =~ m~^text/html~xms &&
+          !defined $body &&
+          !$options{'pdf-to-text'} &&
+          !$options{'pdf-to-word'}
+         ) {
          $body   = $part->body;
          $format = 'html';
          if ($part->content_type =~ m~charset="?(\S+)"?~xms) {
@@ -556,7 +574,14 @@ if (!$options{'convert-attachment'} || !$options{'pdf-to-text'} || !defined $for
    }
 
    # Fallback to plain text if no HTML or if we are in force-url mode (where we prefer plain text)
-   if (($options{'force-url'} || $options{'force-rss-url'} || $options{'force-content-url'} || !defined $body) && !$options{'pdf-to-text'}) {
+   if (($options{'force-url'} ||
+        $options{'force-rss-url'} ||
+        $options{'force-content-url'} ||
+        !defined $body
+       ) &&
+       !$options{'pdf-to-text'} &&
+       !$options{'pdf-to-word'}
+      ) {
       foreach my $part (@parts) {
          if ($part->content_type =~ m~^text/plain~xms) {
             $body = $part->body;
@@ -589,8 +614,8 @@ if (!$options{'convert-attachment'} || !$options{'pdf-to-text'} || !defined $for
    }
 }
 
-$encoding =~ tr/A-Z/a-z/;
-$encoding =~ s/"$//;
+$encoding =~ tr/A-Z/a-z/xms;
+$encoding =~ s/"$//xms;
 
 if ($format eq 'url') {
    if ($url =~ /\.(png|jpg|gif|jpeg)$/igxms) {
@@ -637,7 +662,7 @@ if (defined $format && $format eq 'html' && scalar(@append_images) > 0) {
 }
 
 if ($format eq 'text') {
-   $headers =<<EOF_EOF;
+   $headers =<<"EOF_EOF";
 From: $from_orig
 To: $to
 Subject: $subject
