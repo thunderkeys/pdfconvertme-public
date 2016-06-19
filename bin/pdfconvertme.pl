@@ -32,6 +32,7 @@ use Getopt::Long;
 use Digest::SHA qw(sha256_hex);
 use Email::MIME;
 use HTML::ExtractMain qw(extract_main_html);
+use HTML::FormatText;
 use HTML::HeadParser;
 use HTML::FromText;
 use HTML::Entities;
@@ -57,6 +58,7 @@ my $email_result        = 0;                                   ### CHANGE ME ###
 my $email_domain        = 'yourdomainhere.com';
 my $mail_attachment_cmd = '/usr/local/bin/mail_attachment.sh';
 my $blurb_file          = '/usr/local/etc/pdfconvertme.blurb';
+my $blurb_file_new      = undef;
 my $tmpdir              = '/var/tmp';
 my $failed              = 0;
 my %options;
@@ -74,6 +76,7 @@ my %opts = (
    'pdf-to-text'        => \$options{'pdf-to-text'},
    'pdf-to-word'        => \$options{'pdf-to-word'},
    'force-from=s'       => \$options{'force-from'},
+   'blurb-include-orig' => \$options{'blurb-include-orig'},
    'debug'              => \$options{'debug'},
 );
 my %converters = (
@@ -121,7 +124,7 @@ sub convert_to_pdf {
       TEMPLATE => 'pdfconvertme.XXXXXX',
       DIR      => $tmpdir,
       SUFFIX   => $suffix,
-   );
+   ) or croak $OS_ERROR;
    $pdf_tempfile->unlink_on_destroy(0);
    my $fh;
 
@@ -352,7 +355,7 @@ my $email_input_tmp = File::Temp->new(
    TEMPLATE => 'pdfconvertme.XXXXXX',
    DIR      => $tmpdir,
    SUFFIX   => '.msg'
-);
+) or croak $OS_ERROR;
 # Don't unlink the file when we go out of scope
 $email_input_tmp->unlink_on_destroy(0);
 
@@ -439,11 +442,19 @@ my $attachment_file;
 my @inline_images;
 my @append_images;
 my $tempdir = tempdir(DIR => $tmpdir);
-my $html_tempfile = File::Temp->new(DIR => $tempdir, SUFFIX => '.html');
+my $html_tempfile = File::Temp->new(DIR => $tempdir, SUFFIX => '.html')
+   or croak $OS_ERROR;
 my $encoding = 'utf-8';
 
 if ($options{'convert-attachment'} && !$attachments_enabled) {
    croak 'Attachment conversion is disabled';
+}
+if ($options{'blurb-include-orig'}) {
+   $blurb_file_new = File::Temp->new(
+      TEMPLATE => 'pdfconvertme.XXXXXX',
+      DIR      => $tmpdir,
+      SUFFIX   => '.blurb',
+   ) or croak $OS_ERROR;
 }
 
 $html_tempfile->unlink_on_destroy(0);
@@ -482,7 +493,7 @@ if ($options{'convert-attachment'}) {
                TEMPLATE => 'pdfconvertme_attachment.XXXXXX',
                DIR      => $tmpdir,
                SUFFIX   => $suffix
-            );
+            ) or croak $OS_ERROR;
             $attachment_file->unlink_on_destroy(0);
             my $attach_fh;
             if (!open($attach_fh, '>', $attachment_file)) {
@@ -614,7 +625,7 @@ if (!$options{'convert-attachment'} ||
    }
 }
 
-$encoding =~ tr/A-Z/a-z/xms;
+$encoding =~ tr/A-Z/a-z/;
 $encoding =~ s/"$//xms;
 
 if ($format eq 'url') {
@@ -735,6 +746,22 @@ if (-s $pdf_filename) {
    my $response_subject_prefix = 'Converted: ';
    if ($options{'no-subject-prefix'}) {
       $response_subject_prefix = '';
+   }
+
+   if (-f $blurb_file && $options{'blurb-include-orig'} &&
+       defined $body && $body !~ /^\s*$/xms) {
+      my $blurb_content = read_file($blurb_file);
+      my $orig_body_plaintext = HTML::FormatText->format_string(
+                                  $body,
+                                  leftmargin => 0, rightmargin => 50
+                                );
+      $blurb_content .= "\n----- Body of conversion request below -----\n";
+      $blurb_content .= $orig_body_plaintext;
+      my $new_blurb_fh;
+      open($new_blurb_fh, '>', $blurb_file_new) or croak $OS_ERROR;
+      print {$new_blurb_fh} $blurb_content . "\n";
+      close($new_blurb_fh);
+      $blurb_file = $blurb_file_new->filename;
    }
 
    if ($email_result) {
