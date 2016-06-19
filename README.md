@@ -48,3 +48,4 @@ Installation/Usage:
   - `--pdf-to-word` - Attempts to convert a PDF to Microsoft Word format
   - `--force-from <address>` - Force the response to come from a specific address
   - `--force-markdown` - Treat inline text as [Markdown](http://daringfireball.net/projects/markdown/syntax), implies --no-headers
+  - `--blurb-include-orig` - Include the body of the original message in the response body
