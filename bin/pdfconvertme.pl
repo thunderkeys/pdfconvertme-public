@@ -749,7 +749,7 @@ if (-s $pdf_filename) {
    }
 
    if (-f $blurb_file && $options{'blurb-include-orig'} &&
-       defined $body && $body !~ /^\s*$/xms) {
+       defined $body && $body ne '') {
       my $blurb_content = read_file($blurb_file);
       my $orig_body_plaintext = HTML::FormatText->format_string(
                                   $body,
