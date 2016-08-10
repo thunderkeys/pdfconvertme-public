@@ -546,6 +546,10 @@ if (!$options{'convert-attachment'} ||
          if ($part->content_type =~ m~charset="?(\S+)"?~xms) {
             $encoding = $1;
          }
+         # RFC 2045 forbids = as last character, remove it
+         if ($part->header('Content-Transfer-Encoding') eq 'quoted-printable') {
+            $body =~ s/=$//;
+         }
       }
       elsif ($part->content_type =~ m~image/(\S+)~xms) {
          my $image_extension = $1;
