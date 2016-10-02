@@ -388,15 +388,17 @@ my $from_orig = $from;
 if (!defined $from) {
    croak "ERROR: No 'From:' header, aborting!";
 }
-my $alternate_from = $parsed->header('Reply-to');
-if (defined $alternate_from && $alternate_from !~ /^\s*$/xms && $alternate_from !~ /^(?:donot|no)reply\@/xms) {
-   $from = $alternate_from;
-}
-else {
-   $alternate_from = $parsed->header('Resent-from');
-   if (defined $alternate_from && $alternate_from !~ /^\s*$/xms) {
+
+foreach my $alt_header (qw(X-Forwarded-For Reply-To Resent-From)) {
+   my $alternate_from = $parsed->header($alt_header);
+   if (defined $alternate_from && $alternate_from !~ /^\s*$/xms && $alternate_from !~ /^(?:donot|no)reply\@/xms) {
       $from = $alternate_from;
+      last;
    }
+}
+
+if ($from =~ /^(?:donot|no)reply\@/xms) {
+   exit 0;
 }
 
 my $subject   = $parsed->header('Subject');
