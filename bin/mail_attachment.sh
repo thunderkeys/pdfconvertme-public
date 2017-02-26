@@ -48,7 +48,7 @@ filebase=`basename "$ATTACHOLDFILE"`
 extension=${filebase##*.}
 lowerextension=`echo "$extension"|tr A-Z a-z`
 
-mpack $BLURB -s "$SUBJECT" -o $MAIL_BODY "$ATTACHMENT"
+mpack -a $BLURB -s "$SUBJECT" -o $MAIL_BODY "$ATTACHMENT"
 
 if [ ! -z "$ATTACHNEWFILE" ]; then
    # If subject is not empty, replace attachment filename with <subject>.<extension>

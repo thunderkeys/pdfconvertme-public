@@ -262,6 +262,9 @@ sub clean_url {
    # remove any extra newlines
    $url     =~ s/[\r\n]//xms;
 
+   # Don't shorten or modify google search URLs - sends back to homepage
+   return $url if $url =~ m~google\.com/search~xms;
+
    # encode any special html characters
    $url     = encode_entities($url);
 
