@@ -104,7 +104,7 @@ for input_filename in input_files:
            append_images.append(image_entry)
         
         # Write out the attached image
-        f = open(temp_output_dir + '/' + filename_hash, 'w')
+        f = open(os.path.join(temp_output_dir, filename_hash), 'w')
         if f:
           f.write(part.get_payload(decode=True))
           f.close()
