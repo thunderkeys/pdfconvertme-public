@@ -35,7 +35,7 @@ import os
 from subprocess import call
 
 # Globals
-debug           = True
+debug           = False
 papersize       = 'A4'
 wkhtmltopdf_bin = '/usr/local/bin/wkhtmltopdf'
 tmpdir          = '/var/tmp'
