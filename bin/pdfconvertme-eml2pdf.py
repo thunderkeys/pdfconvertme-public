@@ -34,24 +34,35 @@ import re
 import os
 from subprocess import call
 
-# Globals
-debug           = False
+## Globals
+# Default is A4, but could be A5, Letter, Legal, etc
 papersize       = 'A4'
+# One of: cups (easier install), wkhtmltopdf (better PDFs)
+converter_type  = 'cups'
+
+# Probably don't mess with these...
 wkhtmltopdf_bin = '/usr/local/bin/wkhtmltopdf'
 cupsfilter_bin  = '/usr/sbin/cupsfilter'
-converter_type  = 'cups' # or wkhtmltopdf
 tmpdir          = '/var/tmp'
+debug           = False
+
+## Recursively scan a directory looking for all .eml files
+def get_eml_files(input_dir):
+  input_files=[]
+  for filename in os.listdir(input_dir):
+    if os.path.isdir(os.path.join(input_dir, filename)):
+      input_files += get_eml_files(os.path.join(input_dir, filename))
+    if os.path.isfile(os.path.join(input_dir, filename)) and filename.endswith(".eml"):
+      input_files.append(os.path.join(input_dir, filename))
+  return input_files
 
 # Process input file(s)
 input_files=[]
 for arg in sys.argv[1:]:
-  # if it's a directory, process all files in the directory that match .eml
   if os.path.isdir(arg):
-    for filename in os.listdir(arg):
-      if filename.endswith(".eml"):
-        input_files.append(os.path.join(arg, filename))
+    input_files += get_eml_files(arg)
   else:
-    if os.path.isfile(arg):
+    if os.path.isfile(arg) and arg.endswith(".eml"):
       input_files.append(arg)
 
 for input_filename in input_files:
@@ -144,6 +155,8 @@ for input_filename in input_files:
   pdf_output_file = tempfile.NamedTemporaryFile(suffix = '.pdf', dir=temp_output_dir, delete=False)
   if converter_type == 'cups':
     FNULL = open(os.devnull, 'w')
+    if debug:
+      FNULL=None
     retcode=call([cupsfilter_bin, '-o', 'media=' + papersize, '-t', msg['subject'], html_tempfile.name], stdout=pdf_output_file, stderr=FNULL)
   elif converter_type == 'wkhtmltopdf':
     call([wkhtmltopdf_bin, '-s', papersize, '--encoding', 'utf-8', '--title', msg['subject'], '-q', html_tempfile.name, pdf_output_file.name])
