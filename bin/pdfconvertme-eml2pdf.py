@@ -38,6 +38,8 @@ from subprocess import call
 debug           = False
 papersize       = 'A4'
 wkhtmltopdf_bin = '/usr/local/bin/wkhtmltopdf'
+cupsfilter_bin  = '/usr/sbin/cupsfilter'
+converter_type  = 'cups' # or wkhtmltopdf
 tmpdir          = '/var/tmp'
 
 # Process input file(s)
@@ -140,7 +142,14 @@ for input_filename in input_files:
   
   # Run the PDF conversion
   pdf_output_file = tempfile.NamedTemporaryFile(suffix = '.pdf', dir=temp_output_dir, delete=False)
-  call([wkhtmltopdf_bin, '-s', papersize, '--encoding', 'utf-8', '--title', msg['subject'], '-q', html_tempfile.name, pdf_output_file.name])
+  if converter_type == 'cups':
+    FNULL = open(os.devnull, 'w')
+    retcode=call([cupsfilter_bin, '-o', 'media=' + papersize, '-t', msg['subject'], html_tempfile.name], stdout=pdf_output_file, stderr=FNULL)
+  elif converter_type == 'wkhtmltopdf':
+    call([wkhtmltopdf_bin, '-s', papersize, '--encoding', 'utf-8', '--title', msg['subject'], '-q', html_tempfile.name, pdf_output_file.name])
+  else:
+    print("Unknown converter type %s, exiting" % converter_type)
+    exit(1)
   
   final_output_filename=os.path.join(os.path.dirname(input_filename), os.path.basename(os.path.splitext(input_filename)[0] + '.pdf'))
   shutil.copyfile(pdf_output_file.name, final_output_filename)
