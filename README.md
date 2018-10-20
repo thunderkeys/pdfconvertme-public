@@ -40,7 +40,7 @@ Installation/Usage:
   - `--no-headers` - Don't include email headers at top of converted PDF (From/To/Subject/Date)
   - `--convert-attachment` - Attempt to convert the first valid attachment found in an email
   - `--force-url` - Convert the first URL found in a message body
-  - `--force-rss-url` - Treat the first URL found in a message body as an RSS feed and convert the body found in the fist entry
+  - `--force-rss-url` - Treat the first URL found in a message body as an RSS feed and convert the body found in the first entry
   - `--force-content-url` - Only retrieve the main content of the URL, similar to Readability, implies --no-headers
   - `--no-javascript` - Will perform web conversion requests with javascript disabled
   - `--papersize <size>` - Change the papersize on the resulting PDF (defaults to A4)
