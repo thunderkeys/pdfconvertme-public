@@ -265,8 +265,9 @@ sub clean_url {
    # Don't shorten or modify google search URLs - sends back to homepage
    return $url if $url =~ m~google\.com/search~xms;
 
-   # encode any special html characters
-   $url     = encode_entities($url);
+   # clean up url
+   my $uri = URI->new($url);
+   $url = $uri->as_string;
 
    # attempt to unshorten it
    my $url_new = LWP::UserAgent->new->get($url)->request->uri;
