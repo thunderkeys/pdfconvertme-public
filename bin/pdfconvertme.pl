@@ -31,6 +31,7 @@ use English qw(-no_match_vars);
 use Getopt::Long;
 use Digest::SHA qw(sha256_hex);
 use Email::MIME;
+use Email::Address;
 use HTML::ExtractMain qw(extract_main_html);
 use HTML::FormatText;
 use HTML::HeadParser;
@@ -382,6 +383,7 @@ my $text;
    $text = read_file($email_input_tmp->filename);
 }
 
+$Email::MIME::ContentType::STRICT_PARAMS = 0;
 my $parsed = Email::MIME->new($text);
 if (!$parsed) {
    croak "ERROR: Message failed to parse. Error: $OS_ERROR";
@@ -474,6 +476,7 @@ if ($options{'convert-attachment'}) {
          my $suffix;
          if ($part->filename =~ /(\.[^\.]+)$/xms) {
             $suffix = $1;
+            $suffix =~ s/[^\w]$//;
 
             # Don't try to process signature, rar or zip attachments...
             if ($suffix =~ /^\.(p7s|rar|zip)$/ixms) {
