@@ -147,7 +147,7 @@ sub convert_to_pdf {
       $pdf_tempfile = '';
    }
 
-   return $pdf_tempfile;
+   return $pdf_tempfile->filename;
 }
 
 sub unpack_multipart {
