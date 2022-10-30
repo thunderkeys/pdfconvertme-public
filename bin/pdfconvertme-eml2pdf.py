@@ -103,7 +103,7 @@ for input_filename in input_files:
       body      = '<pre>' + cgi.escape(part.get_payload(decode=True)) + '</pre>'
     # Handle image attachments (inline or otherwise)
     else:
-      m = re.match('^image/(\S+)', content_type)
+      m = re.match(r'^image/(\S+)', content_type)
       if m:
         image_extension = m.group(1)
         if content_id == None:
