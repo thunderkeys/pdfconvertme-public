@@ -16,15 +16,25 @@ if [ -z $OUTPUTFILE ]; then
    exit 1
 else
    if [ -z "$ARGS" ]; then
-      /usr/local/bin/wkhtmltopdf $PROXY --title "$URL" "$URL" $OUTPUTFILE 2>"$STDERR"
-      /bin/grep -q 'Failed loading page' "$STDERR"
-      # If page load failed, try it without javascript
-      if [ $? -eq 0 ]; then
-          /usr/local/bin/wkhtmltopdf $PROXY -n --title "$URL" "$URL" $OUTPUTFILE 2>"$STDERR"
+      if [[ "$URL" =~ \.[Pp][Dd][Ff]$ ]]; then
+         wget -qO "$OUTPUTFILE" "$URL"
+         exit 0
+      else
+         /usr/local/bin/wkhtmltopdf $PROXY --title "$URL" "$URL" $OUTPUTFILE 2>"$STDERR"
+         grep -q 'Failed loading page' "$STDERR"
+         # If page load failed, try it without javascript
+         if [ $? -eq 0 ]; then
+             /usr/local/bin/wkhtmltopdf $PROXY -n --title "$URL" "$URL" $OUTPUTFILE 2>"$STDERR"
+         fi
+         rm -f "$STDERR"
       fi
-      rm -f "$STDERR"
    else
-      /usr/local/bin/wkhtmltopdf $PROXY $ARGS --title "$URL" "$URL" $OUTPUTFILE
+      if [[ "$URL" =~ \.[Pp][Dd][Ff]$ ]]; then
+         wget -qO "$OUTPUTFILE" "$URL"
+         exit 0
+      else
+         /usr/local/bin/wkhtmltopdf $PROXY $ARGS --title "$URL" "$URL" $OUTPUTFILE
+      fi
    fi
 
    # hacky fix for http://code.google.com/p/wkhtmltopdf/issues/detail?id=463

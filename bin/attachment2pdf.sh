@@ -35,6 +35,13 @@ if [ -d $OUTPUTDIR ]; then
       md|markdown) converter='/usr/local/bin/markdown2pdf.sh'
          extension=markdown
          ;;
+      epub) converter='/usr/local/bin/epub2pdf.sh'
+         extension=other
+         ;;
+      pdf) converter='/bin/cp'
+         ;;
+      mov|mp3|mp4|m4v) converter='/bin/false'
+         ;;
       *) converter='/usr/local/bin/image2pdf.sh'
          extension=other
          ;;
@@ -44,7 +51,7 @@ if [ -d $OUTPUTDIR ]; then
       $converter "$OUTPUTFILE" "$INPUTFILE"
    elif [ "x$extension" = "xmarkdown" ]; then
       $converter "$OUTPUTFILE" "$INPUTFILE"
-   elif [ "x$extension" = "xxps" ]; then
+   elif [ "x$extension" = "xxps" -o "x$extension" = "xpdf" ]; then
       $converter "$INPUTFILE" "$OUTPUTFILE"
    else
       CONVERTED_FILE=$OUTPUTDIR/`basename "$INPUTFILE" .$extension`.pdf

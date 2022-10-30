@@ -32,6 +32,12 @@ For attachment conversions:
 
 Other optional packages:
 - a2ps (raw text2pdf, no HTML-ification) - not enabled by default
+- translate-shell (language translation)
+- pdf2htmlEX (https://github.com/pdf2htmlEX/pdf2htmlEX)
+- zip/unzip (For zip conversions)
+- calibre (epub conversions)
+- ghostscript (for manually specifying pdf versions)
+- swaks (for mailgun support - http://www.jetmore.org/john/code/swaks/versions.html)
 
 Installation/Usage:
 - Copy bin/ and etc/ to /usr/local/

@@ -5,11 +5,13 @@ SUBJECT=undefined
 ATTACHMENT=
 ADDRESS=
 BLURB_FILE=
-FROM="pdfconvert@yourdomainhere.com"
+FROM=you@yourdomainhere.com
 REPLY_TO="no-reply@yourdomainhere.com"
 STRIP_TAGS=0
+MAILGUN_AU=yourmailgunapiuserhere
+MAILGUN_AP=yourmailgunapikeyhere
 
-while getopts :s:a:t:b:f:r:T FLAG; do
+while getopts :s:a:t:b:f:r:D:R:dT FLAG; do
     case $FLAG in
         s) SUBJECT=$OPTARG
            ;;
@@ -38,7 +40,7 @@ ATTACHOLDFILE=`basename "$ATTACHMENT"`
 if [ "x$STRIP_TAGS" = "x1" ]; then
    ATTACHNEWFILE=`echo "$SUBJECT"|sed -e 's/^Converted: //' -e 's/"/%22/g' -e 's/:/_/g' -e 's/\xe2\x80\x8b//g' -e 's:[@#][^[:space:]]*::g' -e 's:[[:space:]]*$::' -e 's/–/-/g'`
 else
-   ATTACHNEWFILE=`echo "$SUBJECT"|sed -e 's/^Converted: //' -e 's/"/%22/g' -e 's/:/_/g' -e 's/\xe2\x80\x8b//g' -e 's/–/-/g'`
+   ATTACHNEWFILE=`echo "$SUBJECT"|sed -e 's/^Converted: //' -e 's/"/%22/g' -e 's/:/_/g' -e 's/\xe2\x80\x8b//g' -e 's/–/-/g' -e 's:/:_:g' |sed -e 's/^-/_/g'`
 fi
 
 filebase=`basename "$ATTACHOLDFILE"`
@@ -66,10 +68,20 @@ if [ ! -z "$ATTACHNEWFILE" ]; then
 fi
 
 if [ -s $MAIL_BODY -a -s $MAIL_HEAD ]; then
-   cat $MAIL_HEAD $MAIL_BODY | /usr/lib/sendmail -i -t
+   /usr/local/bin/swaks --auth \
+        -n \
+        --server smtp.mailgun.org \
+        --au "$MAILGUN_AU" \
+        --ap "$MAILGUN_AP" \
+        --to "$ADDRESS" \
+        --h-From: "$FROM" \
+        --h-Reply-To "$REPLY_TO" \
+        --h-Subject: "$SUBJECT" \
+        --attach-name "${ATTACHNEWFILE}.${lowerextension}" \
+        --attach "$ATTACHMENT" \
+        --body "`cat \"$BLURB_FILE\"`"
 else
-   echo "Error assembling message - empty body or header"
+   echo "mailattachment.sh: Error assembling message!"
    exit 1
 fi
 rm $MAIL_HEAD $MAIL_BODY
-
