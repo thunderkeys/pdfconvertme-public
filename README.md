@@ -1,6 +1,8 @@
 pdfconvertme-public
 ===================
 
+**UPDATE** May 4, 2026 - after nearly 13 years I have decided to retire pdfconvert.me effective July 31, 2026.  As such, there will be no further code updates to this repository.
+
 A simplified, open-source version of [pdfconvert.me](http://pdfconvert.me)
 for self-hosting in environments where privacy/security is a concern.
 
